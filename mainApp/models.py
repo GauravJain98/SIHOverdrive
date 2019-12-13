@@ -24,10 +24,17 @@ class Team(CommonInfo):
     def __str__(self):
         return self.name
 
+GENDER = [
+    ("M","Male"),
+    ("F","Female"),
+    ("O","Other"),
+]
 
 class TeamMember(CommonInfo):
+    avatar = models.CharField(max_length=10)
     user = models.ForeignKey(to=User, related_name='team_member', on_delete=models.CASCADE)
     team = models.ManyToManyField(to=Team, related_name='team_member', through='Teammate')
+    gender = models.CharField(max_length=5,choices=GENDER)
 
     def __str__(self):
         return f"{self.user.id} in {self.team}"
@@ -80,14 +87,18 @@ STATUS = [
     ("S", "Selected"),
     ("N", "Neutral"),
     ("R", "Rejected"),
-    ("T", "Thinking"),
+    ("I", "In-Progress"),
 ]
 
 
 class ProblemStatementTeam(CommonInfo):
+    read = models.BooleanField(default = False)
     problem_statement = models.ForeignKey(ProblemStatement, on_delete=models.CASCADE)
     team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
     status = models.CharField(choices=STATUS, max_length=30)
+    presentation = models.URLField()
+    document = models.URLField()
+    
 
 
 class Comment(CommonInfo):
