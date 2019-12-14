@@ -31,10 +31,10 @@ GENDER = [
 ]
 
 class TeamMember(CommonInfo):
-    avatar = models.CharField(max_length=10)
-    user = models.ForeignKey(to=User, related_name='team_member', on_delete=models.CASCADE)
+    avatar = models.CharField(max_length=10, null=True, blank=True)
+    user = models.OneToOneField(to=User, related_name='team_member', on_delete=models.CASCADE)
     team = models.ManyToManyField(to=Team, related_name='team_member', through='Teammate')
-    gender = models.CharField(max_length=5,choices=GENDER)
+    gender = models.CharField(max_length=5, choices=GENDER, null=False)
 
     def __str__(self):
         return f"{self.user.id} in {self.team}"
@@ -100,7 +100,6 @@ class ProblemStatementTeam(CommonInfo):
     document = models.URLField()
     
 
-
 class Comment(CommonInfo):
     problem_statement_team = models.ForeignKey(ProblemStatementTeam, on_delete=models.CASCADE)
     teammate = models.ForeignKey(Teammate, on_delete=models.CASCADE)
@@ -108,3 +107,8 @@ class Comment(CommonInfo):
     def clean(self):
         if self.teammate.team != self.problem_statement_team.team:
             raise ValidationError("Only team members can comment")
+
+
+class Request(CommonInfo):
+    team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
+    team_member = models.ForeignKey(to=TeamMember, on_delete=models.CASCADE)
