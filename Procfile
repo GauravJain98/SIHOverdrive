@@ -1,1 +1,1 @@
-web: gunicorn djangoTask.wsgi
+web: gunicorn softwars.wsgi
