@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
-
+from django.db.models.signals import post_save
 
 class CommonInfo(models.Model):
     archived = models.BooleanField(default=False)
@@ -15,7 +15,6 @@ class CommonInfo(models.Model):
     class Meta:
         abstract = True
 
-
 class Team(CommonInfo):
     name = models.CharField(max_length=100, null=False, blank=False)
     key = models.CharField(max_length=6, null=True, blank=True)
@@ -23,7 +22,6 @@ class Team(CommonInfo):
 
     def __str__(self):
         return self.name
-
 
 GENDER = [
     ("M", "Male"),
@@ -51,13 +49,6 @@ class Teammate(CommonInfo):
         return f"{self.team_member.id} in {self.team}"
 
 
-class Organization(CommonInfo):
-    name = models.CharField(max_length=200, null=False, blank=False, unique=True)
-
-    def __str__(self):
-        return f"{self.name}"
-
-
 CATEGORIES = [
     ("S", "Software"),
     ("H", "Hardware")
@@ -65,15 +56,14 @@ CATEGORIES = [
 
 
 class ProblemStatement(CommonInfo):
-    organization = models.ForeignKey(to=Organization, related_name='problem_statement', on_delete=models.CASCADE)
+    organization = models.CharField(max_length=200, null=False, blank=False, unique=True)
     category = models.CharField(choices=CATEGORIES, max_length=2)
     ps_number = models.CharField(max_length=6)
     title = models.CharField(max_length=900)
     domain_bucket = models.CharField(max_length=100)
     description = models.TextField()
     youtube_link = models.CharField(max_length=50)
-
-    # dataset_link = models.CharField(max_length=)
+    dataset_link = models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.title}"
@@ -115,3 +105,19 @@ class Request(CommonInfo):
     team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
     team_member = models.ForeignKey(to=TeamMember, on_delete=models.CASCADE)
     accepted = models.BooleanField(default=False)
+
+
+def team_post(sender, instance, created, *args, **kwargs):
+    for ps in ProblemStatement.objects.all():
+        pst = ProblemStatementTeam.objects.create(problem_statement=ps, team=instance)
+        pst.save()
+
+
+def problem_statement_post(sender, instance, created, *args, **kwargs):
+    for t in Team.objects.all():
+        pst = ProblemStatementTeam.objects.create(problem_statement=instance, team=t)
+        pst.save()
+
+
+post_save.connect(problem_statement_post, sender=ProblemStatement)
+post_save.connect(team_post, sender=Team)
