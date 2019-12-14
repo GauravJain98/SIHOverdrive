@@ -7,7 +7,7 @@ from rest_framework import serializers
 from .models import *
 
 
-def randomString(stringLength=10):
+def randomString(stringLength=6):
     """Generate a random string of fixed length """
     letters = string.hexdigits
     return ''.join(random.choice(letters) for i in range(stringLength))
@@ -19,6 +19,9 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
+        key = randomString()
+        while Team.objects.filter(key=key).exists():
+            key = randomString()
         team = Team(
             name=validated_data['name'],
             key=randomString()

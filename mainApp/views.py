@@ -1,4 +1,5 @@
-from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, permissions
 from rest_framework import viewsets
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.generics import CreateAPIView
@@ -43,14 +44,33 @@ class NoteViewSet(viewsets.ModelViewSet):
     serializer_class = NoteSerializer
 
 
+class ProblemStatementTeamPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return Teammate.objects.filter(team=obj.team, team_member=request.user.team_member).exists()
+
+
 class ProblemStatementTeamViewSet(viewsets.ModelViewSet):
     queryset = ProblemStatementTeam.objects.all()
+    permission_classes = (ProblemStatementTeamPermission,)
     serializer_class = ProblemStatementTeamSerializer
+
+    def get_queryset(self):
+        request = self.request
+        pst = ProblemStatementTeam.objects.filter(team__team_mate__team_member=request.user.team_member)
+        return pst
+
+
+class CommentPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.method in permissions.SAFE_METHODS and obj.teammate.team_member == request.user.team_member
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommentPermission,)
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['problem_statement_team', 'teammate']
 
 
 class RegisterView(CreateAPIView):
@@ -98,10 +118,27 @@ class NotificationView(APIView):
         notification = request.data.get("notification", None)
         team_member = request.user.team_member
         teams = team_member.team.filter(team_mate__leader=True)
-        if notification:
+        if notification is not None:
             request_obj = Request.objects.get(id=notification, team__in=teams)
             request_obj.accepted = True
             request_obj.save()
             Teammate(team_member=request_obj.team_member, team=request_obj.team)
             return Response(f"Accepted {request_obj.team_member.user.first_name}", status=status.HTTP_400_BAD_REQUEST)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListTeams(APIView):
+    def get(self, request, format=None):
+        tm = request.user.team_member
+        team = Teammate.objects.filter(team_member=tm)
+        serializer = TeammateSerializer(team, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ListProblem(APIView):
+    def get(self, request, team, format=None):
+        if Teammate.objects.filter(team__id=team, team_member=request.user.team_member):
+            team = ProblemStatementTeam.objects.filter(team_id=team)
+            serializer = ProblemStatementSerializer(team, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)

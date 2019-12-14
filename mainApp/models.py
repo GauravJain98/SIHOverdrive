@@ -19,7 +19,7 @@ class CommonInfo(models.Model):
 
 class Team(CommonInfo):
     name = models.CharField(max_length=100, null=False, blank=False)
-    key = models.CharField(max_length=6, null=True, blank=True)
+    key = models.CharField(max_length=10, null=True, blank=True)
     note = models.TextField(default="")
 
     def __str__(self):
