@@ -46,7 +46,7 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamMember
-        fields = ('user', 'gender')
+        fields = ('user', 'gender', 'avatar')
 
     @transaction.atomic
     def create(self, validated_data):

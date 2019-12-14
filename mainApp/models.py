@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 
+
 class CommonInfo(models.Model):
     archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -15,6 +16,7 @@ class CommonInfo(models.Model):
     class Meta:
         abstract = True
 
+
 class Team(CommonInfo):
     name = models.CharField(max_length=100, null=False, blank=False)
     key = models.CharField(max_length=6, null=True, blank=True)
@@ -22,6 +24,7 @@ class Team(CommonInfo):
 
     def __str__(self):
         return self.name
+
 
 GENDER = [
     ("M", "Male"),
@@ -31,7 +34,7 @@ GENDER = [
 
 
 class TeamMember(CommonInfo):
-    avatar = models.CharField(max_length=10, null=True, blank=True)
+    avatar = models.CharField(max_length=10, null=True, blank=True, default="")
     user = models.OneToOneField(to=User, related_name='team_member', on_delete=models.CASCADE)
     team = models.ManyToManyField(to=Team, related_name='team_member', through='Teammate')
     gender = models.CharField(max_length=5, choices=GENDER, null=False)

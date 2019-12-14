@@ -2,11 +2,16 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import *
+
+
+class TeamMemberPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return bool(request.user.is_authenticated and request.user.team_member == obj)
 
 
 class TeamViewSet(viewsets.ModelViewSet):
@@ -14,9 +19,13 @@ class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = TeamSerializer
 
 
-class TeamMemberViewSet(viewsets.ModelViewSet):
+class TeamMemberViewSet(APIView):
+    permission_classes = (TeamMemberPermission,)
     queryset = TeamMember.objects.all()
     serializer_class = TeamMemberSerializer
+
+    def get(self, request, format=None):
+        return Response(self.serializer_class(request.user.team_member).data, status=status.HTTP_200_OK)
 
 
 class TeammateViewSet(viewsets.ModelViewSet):
