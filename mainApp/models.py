@@ -18,17 +18,19 @@ class CommonInfo(models.Model):
 
 class Team(CommonInfo):
     name = models.CharField(max_length=100, null=False, blank=False)
-    key = models.CharField(max_length=6, unique=True, null=False, blank=False)
-    note = models.TextField()
+    key = models.CharField(max_length=6, null=True, blank=True)
+    note = models.TextField(default="")
 
     def __str__(self):
         return self.name
 
+
 GENDER = [
-    ("M","Male"),
-    ("F","Female"),
-    ("O","Other"),
+    ("M", "Male"),
+    ("F", "Female"),
+    ("O", "Other"),
 ]
+
 
 class TeamMember(CommonInfo):
     avatar = models.CharField(max_length=10, null=True, blank=True)
@@ -37,7 +39,7 @@ class TeamMember(CommonInfo):
     gender = models.CharField(max_length=5, choices=GENDER, null=False)
 
     def __str__(self):
-        return f"{self.user.id} in {self.team}"
+        return f"{self.user.id}"
 
 
 class Teammate(CommonInfo):
@@ -92,13 +94,13 @@ STATUS = [
 
 
 class ProblemStatementTeam(CommonInfo):
-    read = models.BooleanField(default = False)
+    read = models.BooleanField(default=False)
     problem_statement = models.ForeignKey(ProblemStatement, on_delete=models.CASCADE)
     team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
     status = models.CharField(choices=STATUS, max_length=30)
     presentation = models.URLField()
     document = models.URLField()
-    
+
 
 class Comment(CommonInfo):
     problem_statement_team = models.ForeignKey(ProblemStatementTeam, on_delete=models.CASCADE)
@@ -112,3 +114,4 @@ class Comment(CommonInfo):
 class Request(CommonInfo):
     team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
     team_member = models.ForeignKey(to=TeamMember, on_delete=models.CASCADE)
+    accepted = models.BooleanField(default=False)

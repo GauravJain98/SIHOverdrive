@@ -15,9 +15,11 @@ router.register(r'problemstatementteam', views.ProblemStatementTeamViewSet)
 router.register(r'comment', views.CommentViewSet)
 
 urlpatterns = [
-    url('join/', views.JoinView.as_view()),
-    url('admin/', admin.site.urls),
-    url('api-token-auth/', rest_auth_views.obtain_auth_token),
-    url('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^', include(router.urls)),
+    url('api/register/', views.RegisterView.as_view()),
+    url('api/join/', views.JoinView.as_view()),
+    url('api/notification/', views.NotificationView.as_view()),
+    url('api/admin/', admin.site.urls),
+    url('api/login/', rest_auth_views.obtain_auth_token),
+    url('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url('api/', include(router.urls)),
 ]
