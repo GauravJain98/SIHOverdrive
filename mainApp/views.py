@@ -97,10 +97,11 @@ class JoinView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             key = request.data['key']
-            name = request.data['name']
-            team = Team.objects.get(name=name, key=key)
-            request = Request.objects.get_or_create(team=team, team_member=request.user.team_member)
-            return Response("Request Sent", status=status.HTTP_200_OK)
+            team = Team.objects.get(key=key)
+            request, created = Request.objects.get_or_create(team=team, team_member=request.user.team_member)
+            if created:
+                return Response("Request Sent", status=status.HTTP_200_OK)
+            return Response("Request Already Sent awaiting response", status=status.HTTP_200_OK)
 
 
 class NotificationView(APIView):
@@ -150,7 +151,23 @@ class TeamMemberList(APIView):
 
     def get(self, request, pk, format=None):
         if pk is not None and Teammate.objects.filter(team__id=pk, team_member=request.user.team_member).exists():
-            team_members = Teammate.objects.filter(team__id=pk, team_member=request.user.team_member)
+            team_members = Teammate.objects.filter(team__id=pk)
             serializer = TeammateTeamMemberSerializer(team_members, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        if pk is not None and Teammate.objects.filter(team__id=pk, team_member=request.user.team_member).exists():
+            team_member = Teammate.objects.filter(team__id=pk, team_member=request.user.team_member).first()
+            serializer = TeammateTeamMemberSerializer(team_member)
+            if team_member.leader is True:
+                team_members = Teammate.objects.filter(team__id=pk).exclude(id=team_member.id).first()
+                if team_members is None:
+                    Team.objects.filter(id=pk).delete()
+                    return Response("Team Deleted", status=status.HTTP_200_OK)
+                else:
+                    team_members.leader = True
+                    team_members.save()
+            team_member.delete()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)

@@ -14,11 +14,13 @@ router.register(r'problemstatementteam', views.ProblemStatementTeamViewSet)
 router.register(r'comment', views.CommentViewSet)
 
 # TODO
-# Your Team Members
-# Leave Team
-# Requests
-# Problem Statement States
+# Team name update
+# Changed Password
+# Add email service
+# Problem Statement Statistics
 # Logo
+# Requests
+
 
 urlpatterns = [
     url('api/register/', views.RegisterView.as_view()),
