@@ -24,6 +24,7 @@ urlpatterns = [
     url('api/register/', views.RegisterView.as_view()),
     url('api/team/list/', views.ListTeams.as_view()),
     url('api/problem_statement/list/', views.ListProblem.as_view()),
+    url(r'api/team/(?P<pk>\d+)/$', views.TeamMemberList.as_view()),
     url('api/team/', views.JoinView.as_view()),
     url('api/notification/', views.NotificationView.as_view()),
     url('api/teammember/', views.TeamMemberViewSet.as_view()),

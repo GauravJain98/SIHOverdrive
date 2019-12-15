@@ -122,12 +122,13 @@ class NotificationView(APIView):
             request_obj = Request.objects.get(id=notification, team__in=teams)
             request_obj.accepted = True
             request_obj.save()
-            Teammate(team_member=request_obj.team_member, team=request_obj.team)
+            Teammate.objects.create(team_member=request_obj.team_member, team=request_obj.team)
             return Response(f"Accepted {request_obj.team_member.user.first_name}", status=status.HTTP_400_BAD_REQUEST)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
 
 class ListTeams(APIView):
+
     def get(self, request, format=None):
         tm = request.user.team_member
         team = Teammate.objects.filter(team_member=tm)
@@ -136,9 +137,20 @@ class ListTeams(APIView):
 
 
 class ListProblem(APIView):
+
     def get(self, request, team, format=None):
         if Teammate.objects.filter(team__id=team, team_member=request.user.team_member):
             team = ProblemStatementTeam.objects.filter(team_id=team)
             serializer = ProblemStatementSerializer(team, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+
+
+class TeamMemberList(APIView):
+
+    def get(self, request, pk, format=None):
+        if pk is not None and Teammate.objects.filter(team__id=pk, team_member=request.user.team_member).exists():
+            team_members = Teammate.objects.filter(team__id=pk, team_member=request.user.team_member)
+            serializer = TeammateTeamMemberSerializer(team_members, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)

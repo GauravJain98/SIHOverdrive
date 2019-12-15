@@ -63,6 +63,16 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 
 
 class TeammateSerializer(serializers.ModelSerializer):
+    team = TeamSerializer(required=True)
+
+    class Meta:
+        model = Teammate
+        fields = '__all__'
+
+
+class TeammateTeamMemberSerializer(serializers.ModelSerializer):
+    team_member = TeamMemberSerializer(required=True)
+
     class Meta:
         model = Teammate
         fields = '__all__'
