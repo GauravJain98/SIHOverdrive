@@ -192,5 +192,5 @@ class TeamMemberList(APIView):
                     team_members.leader = True
                     team_members.save()
             team_member.delete()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(f"Left team {team_member.team.name}", status=status.HTTP_200_OK)
         return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
