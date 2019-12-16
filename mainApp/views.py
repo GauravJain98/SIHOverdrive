@@ -16,13 +16,13 @@ class TeamMemberPermission(BasePermission):
 
 
 class TeamViewSet(viewsets.ModelViewSet):
-    queryset = Team.objects.all()
+    queryset = Team.objects.filter(archived=False).all()
     serializer_class = TeamSerializer
 
 
 class TeamMemberViewSet(APIView):
     permission_classes = (TeamMemberPermission,)
-    queryset = TeamMember.objects.all()
+    queryset = TeamMember.objects.filter(archived=False).all()
     serializer_class = TeamMemberSerializer
 
     def get(self, request, format=None):
@@ -30,33 +30,35 @@ class TeamMemberViewSet(APIView):
 
 
 class TeammateViewSet(viewsets.ModelViewSet):
-    queryset = Teammate.objects.all()
+    queryset = Teammate.objects.filter(archived=False).all()
     serializer_class = TeammateSerializer
 
 
 class ProblemStatementViewSet(viewsets.ModelViewSet):
-    queryset = ProblemStatement.objects.all()
+    queryset = ProblemStatement.objects.filter(archived=False).all()
     serializer_class = ProblemStatementSerializer
 
 
 class NoteViewSet(viewsets.ModelViewSet):
-    queryset = Note.objects.all()
+    queryset = Note.objects.filter(archived=False).all()
     serializer_class = NoteSerializer
 
 
 class ProblemStatementTeamPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return Teammate.objects.filter(team=obj.team, team_member=request.user.team_member).exists()
+        return Teammate.objects.filter(archived=False).filter(team=obj.team,
+                                                              team_member=request.user.team_member).exists()
 
 
 class ProblemStatementTeamViewSet(viewsets.ModelViewSet):
-    queryset = ProblemStatementTeam.objects.all()
+    queryset = ProblemStatementTeam.objects.filter(archived=False).all()
     permission_classes = (ProblemStatementTeamPermission,)
     serializer_class = ProblemStatementTeamSerializer
 
     def get_queryset(self):
         request = self.request
-        pst = ProblemStatementTeam.objects.filter(team__team_mate__team_member=request.user.team_member)
+        pst = ProblemStatementTeam.objects.filter(archived=False).filter(
+            team__team_mate__team_member=request.user.team_member)
         return pst
 
 
@@ -67,7 +69,7 @@ class CommentPermission(BasePermission):
 
 class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (CommentPermission,)
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.filter(archived=False).all()
     serializer_class = CommentSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['problem_statement_team', 'teammate']
@@ -91,14 +93,16 @@ class JoinView(APIView):
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
                 team = serializer.save()
-                Teammate.objects.get_or_create(team=team, team_member=request.user.team_member, leader=True)
+                Teammate.objects.filter(archived=False).get_or_create(team=team, team_member=request.user.team_member,
+                                                                      leader=True)
                 request.user.team_member.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             key = request.data['key']
-            team = Team.objects.get(key=key)
-            request, created = Request.objects.get_or_create(team=team, team_member=request.user.team_member)
+            team = Team.objects.filter(archived=False).get(key=key)
+            request, created = Request.objects.filter(archived=False).get_or_create(team=team,
+                                                                                    team_member=request.user.team_member)
             if created:
                 return Response("Request Sent", status=status.HTTP_200_OK)
             return Response("Request Already Sent awaiting response", status=status.HTTP_200_OK)
@@ -110,29 +114,43 @@ class NotificationView(APIView):
 
     def get(self, request, format=None):
         team = request.GET['team']
-        notifications = Request.objects.filter(accepted=False, team__id__in=request.user.team_member.team_mate.filter(
-            leader=True).filter(id=team).values_list("team__id", flat=True))
-        serializer = RequestSerializer(notifications, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if Teammate.objects.filter(archived=False).filter(leader=True).filter(id=team).exists():
+            notifications = Request.objects.filter(archived=False).filter(accepted=False, team__id=team)
+            serializer = RequestSerializer(notifications, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response("Not team leader", status=status.HTTP_401_UNAUTHORIZED)
 
     def post(self, request, format=None):
         notification = request.data.get("notification", None)
         team_member = request.user.team_member
         teams = team_member.team.filter(team_mate__leader=True)
         if notification is not None:
-            request_obj = Request.objects.get(id=notification, team__in=teams)
+            request_obj = Request.objects.filter(archived=False).get(id=notification, team__in=teams)
             request_obj.accepted = True
             request_obj.save()
-            Teammate.objects.create(team_member=request_obj.team_member, team=request_obj.team)
-            return Response(f"Accepted {request_obj.team_member.user.first_name}", status=status.HTTP_400_BAD_REQUEST)
+            Teammate.objects.filter(archived=False).create(team_member=request_obj.team_member, team=request_obj.team)
+            return Response(f"Accepted {request_obj.team_member.user.first_name}", status=status.HTTP_200_OK)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request, format=None):
+        notification = request.data.get("notification", None)
+        team_member = request.user.team_member
+        teams = team_member.team.filter(archived=False).filter(team_mate__leader=True)
+        if notification is not None:
+            try:
+                request_obj = Request.objects.filter(archived=False).get(id=notification, team__in=teams)
+                request_obj.delete()
+                return Response("Request Deleted", status=status.HTTP_200_OK)
+            except:
+                return Response("Request does not exist", status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response("No Notification ID", status=status.HTTP_400_BAD_REQUEST)
 
 class ListTeams(APIView):
 
     def get(self, request, format=None):
         tm = request.user.team_member
-        team = Teammate.objects.filter(team_member=tm)
+        team = Teammate.objects.filter(archived=False).filter(team_member=tm)
         serializer = TeammateSerializer(team, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -140,8 +158,8 @@ class ListTeams(APIView):
 class ListProblem(APIView):
 
     def get(self, request, team, format=None):
-        if Teammate.objects.filter(team__id=team, team_member=request.user.team_member):
-            team = ProblemStatementTeam.objects.filter(team_id=team)
+        if Teammate.objects.filter(archived=False).filter(team__id=team, team_member=request.user.team_member):
+            team = ProblemStatementTeam.objects.filter(archived=False).filter(team_id=team)
             serializer = ProblemStatementSerializer(team, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
@@ -150,20 +168,24 @@ class ListProblem(APIView):
 class TeamMemberList(APIView):
 
     def get(self, request, pk, format=None):
-        if pk is not None and Teammate.objects.filter(team__id=pk, team_member=request.user.team_member).exists():
-            team_members = Teammate.objects.filter(team__id=pk)
+        if pk is not None and Teammate.objects.filter(archived=False).filter(team__id=pk,
+                                                                             team_member=request.user.team_member).exists():
+            team_members = Teammate.objects.filter(archived=False).filter(team__id=pk)
             serializer = TeammateTeamMemberSerializer(team_members, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        if pk is not None and Teammate.objects.filter(team__id=pk, team_member=request.user.team_member).exists():
-            team_member = Teammate.objects.filter(team__id=pk, team_member=request.user.team_member).first()
+        if pk is not None and Teammate.objects.filter(archived=False).filter(team__id=pk,
+                                                                             team_member=request.user.team_member).exists():
+            team_member = Teammate.objects.filter(archived=False).filter(team__id=pk,
+                                                                         team_member=request.user.team_member).first()
             serializer = TeammateTeamMemberSerializer(team_member)
             if team_member.leader is True:
-                team_members = Teammate.objects.filter(team__id=pk).exclude(id=team_member.id).first()
+                team_members = Teammate.objects.filter(archived=False).filter(team__id=pk).exclude(
+                    id=team_member.id).first()
                 if team_members is None:
-                    Team.objects.filter(id=pk).delete()
+                    Team.objects.filter(archived=False).filter(id=pk).delete()
                     return Response("Team Deleted", status=status.HTTP_200_OK)
                 else:
                     team_members.leader = True

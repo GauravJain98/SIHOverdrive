@@ -21,7 +21,7 @@ def has_delete_permission(self, request, obj=None):
     return False
 
 
-def classDict(model_name, model):
+def class_dict(model_name, model):
     model_name = model_name.lower()
     listField = ()
     filterFields = ()
@@ -47,5 +47,5 @@ def classDict(model_name, model):
 
 
 for model_name, model in app.models.items():
-    model_admin = type(model_name + "Admin", (admin.ModelAdmin,), classDict(model_name, model))
+    model_admin = type(model_name + "Admin", (admin.ModelAdmin,), class_dict(model_name, model))
     admin.site.register(model, model_admin)
