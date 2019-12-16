@@ -1,10 +1,11 @@
 import random
 import string
 
+from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import *
+from mainApp.models import Team, TeamMember, Teammate, ProblemStatement, Note, ProblemStatementTeam, Comment, Request
 
 
 def randomString(stringLength=6):
