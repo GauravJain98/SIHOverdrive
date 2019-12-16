@@ -6,7 +6,6 @@ from rest_framework.authtoken import views as rest_auth_views
 from mainApp import views
 
 router = routers.DefaultRouter()
-# router.register(r'team', views.TeamViewSet)
 router.register(r'teammate', views.TeammateViewSet)
 router.register(r'problemstatement', views.ProblemStatementViewSet)
 router.register(r'note', views.NoteViewSet)

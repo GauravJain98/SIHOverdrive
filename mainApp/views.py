@@ -146,6 +146,7 @@ class NotificationView(APIView):
         else:
             return Response("No Notification ID", status=status.HTTP_400_BAD_REQUEST)
 
+
 class ListTeams(APIView):
 
     def get(self, request, format=None):
