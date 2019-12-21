@@ -10,7 +10,7 @@ from mainApp.models import Team, TeamMember, Teammate, ProblemStatement, Note, P
 
 def randomString(stringLength=6):
     """Generate a random string of fixed length """
-    letters = string.hexdigits
+    letters = string.ascii_uppercase + string.digits
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 
