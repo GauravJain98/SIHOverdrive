@@ -40,7 +40,7 @@ class TeamMember(CommonInfo):
     gender = models.CharField(max_length=5, choices=GENDER, null=False)
 
     def __str__(self):
-        return f"{self.user.id}"
+        return f"{self.user.email}"
 
 
 class Teammate(CommonInfo):
@@ -65,7 +65,7 @@ class ProblemStatement(CommonInfo):
     title = models.CharField(max_length=900)
     domain_bucket = models.CharField(max_length=100)
     description = models.TextField()
-    youtube_link = models.CharField(max_length=50)
+    youtube = models.CharField(max_length=50)
     dataset_link = models.CharField(max_length=100)
 
     def __str__(self):
