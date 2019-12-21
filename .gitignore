@@ -339,9 +339,6 @@ pip-selfcheck.json
 
 mailhog
 
-# Migration Files
-softwars/*/migrations/
-
 #M Media Files
 softwars/media/
 
