@@ -63,7 +63,7 @@ CATEGORIES = [
 
 
 class ProblemStatement(CommonInfo):
-    organization = models.CharField(max_length=200, null=False, blank=False, unique=True)
+    organization = models.CharField(max_length=200, null=False, blank=False)
     category = models.CharField(choices=CATEGORIES, max_length=2)
     ps_number = models.CharField(max_length=6)
     title = models.CharField(max_length=900)

@@ -97,12 +97,15 @@ class JoinView(AuthViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             key = request.data['key']
-            team = Team.objects.filter(archived=False).get(key=key)
-            if not Teammate.objects.filter(team=team, team_member=request.user.team_member).exists():
+            try:
+                team = Team.objects.filter(archived=False).get(key=key)
+            except Team.DoesNotExist:
+                return Response("Invalid Key", status=status.HTTP_404_NOT_FOUND)
+            if not Teammate.objects.filter(team=team, team_member=request.user.team_member, archived=False).exists():
                 try:
-                    req = Request.objects.get(team=team, team_member=request.user.team_member)
-                    if req.archived:
-                        return Response("Sorry but the request has been rejected :( ", status=status.HTTP_200_OK)
+                    req = Request.objects.filter(team=team, team_member=request.user.team_member)
+                    req.archived = False
+                    req.save()
                     return Response("Request Already Sent Awaiting Response", status=status.HTTP_200_OK)
                 except Request.DoesNotExist:
                     obj = Request(team=team, team_member=request.user.team_member)
