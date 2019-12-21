@@ -14,11 +14,12 @@ router.register(r'comment', views.CommentViewSet)
 
 # TODO
 # cors
-#
 # Team name update
-# Changed Password
+# Data
 # Problem Statement Statistics
+
 # Logo
+# Changed Password
 # Requests
 # Add email service
 

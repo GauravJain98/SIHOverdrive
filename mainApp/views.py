@@ -103,8 +103,8 @@ class JoinView(AuthViewSet):
                                                                                         team_member=request.user.team_member)
                 if created:
                     return Response("Request Sent", status=status.HTTP_200_OK)
-                return Response("Request Already Sent awaiting response", status=status.HTTP_200_OK)
-            return Response("Already joined team", status=status.HTTP_200_OK)
+                return Response("Request Already Sent Awaiting Response", status=status.HTTP_200_OK)
+            return Response("Already Joined Team", status=status.HTTP_200_OK)
 
 
 class NotificationView(AuthViewSet):
@@ -113,7 +113,8 @@ class NotificationView(AuthViewSet):
 
     def get(self, request, format=None):
         team = request.GET['team']
-        if Teammate.objects.filter(archived=False).filter(leader=True).filter(id=team).exists():
+        if Teammate.objects.filter(archived=False).filter(leader=True, team__id=team,
+                                                          team_member=request.user.team_member).exists():
             notifications = Request.objects.filter(archived=False).filter(accepted=False, team__id=team)
             serializer = RequestSerializer(notifications, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
