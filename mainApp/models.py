@@ -4,6 +4,10 @@ from django.db import models
 from django.db.models.signals import post_save
 
 
+# def function():
+#     from mainApp.models import ProblemStatement
+
+
 class CommonInfo(models.Model):
     archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
