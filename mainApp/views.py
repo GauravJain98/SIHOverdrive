@@ -98,7 +98,7 @@ class JoinView(AuthViewSet):
         else:
             key = request.data['key']
             team = Team.objects.filter(archived=False).get(key=key)
-            if Teammate.objects.filter(team=team, team_member=request.user.team_member).exists():
+            if not Teammate.objects.filter(team=team, team_member=request.user.team_member).exists():
                 try:
                     req = Request.objects.get(team=team, team_member=request.user.team_member)
                     if req.archived:
