@@ -49,7 +49,7 @@ class Teammate(CommonInfo):
     leader = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.team_member.id} in {self.team}"
+        return f"{self.team_member} in {self.team}"
 
 
 CATEGORIES = [
