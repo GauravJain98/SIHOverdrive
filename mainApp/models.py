@@ -4,10 +4,6 @@ from django.db import models
 from django.db.models.signals import post_save
 
 
-# def function():
-#     from mainApp.models import ProblemStatement
-
-
 class CommonInfo(models.Model):
     archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -64,7 +60,7 @@ CATEGORIES = [
 
 class ProblemStatement(CommonInfo):
     organization = models.CharField(max_length=200, null=False, blank=False)
-    category = models.CharField(choices=CATEGORIES, max_length=2)
+    category = models.CharField(choices=CATEGORIES, max_length=70)
     ps_number = models.CharField(max_length=6)
     title = models.CharField(max_length=900)
     domain_bucket = models.CharField(max_length=100)
