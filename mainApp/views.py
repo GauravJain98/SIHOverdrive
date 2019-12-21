@@ -99,11 +99,15 @@ class JoinView(AuthViewSet):
             key = request.data['key']
             team = Team.objects.filter(archived=False).get(key=key)
             if Teammate.objects.filter(team=team, team_member=request.user.team_member).exists():
-                request, created = Request.objects.filter(archived=False).get_or_create(team=team,
-                                                                                        team_member=request.user.team_member)
-                if created:
+                try:
+                    req = Request.objects.get(team=team, team_member=request.user.team_member)
+                    if req.archived:
+                        return Response("Sorry but the request has been rejected :( ", status=status.HTTP_200_OK)
+                    return Response("Request Already Sent Awaiting Response", status=status.HTTP_200_OK)
+                except Request.DoesNotExist:
+                    obj = Request(team=team, team_member=request.user.team_member)
+                    obj.save()
                     return Response("Request Sent", status=status.HTTP_200_OK)
-                return Response("Request Already Sent Awaiting Response", status=status.HTTP_200_OK)
             return Response("Already Joined Team", status=status.HTTP_200_OK)
 
 
