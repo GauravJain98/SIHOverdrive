@@ -13,12 +13,14 @@ router.register(r'problemstatementteam', views.ProblemStatementTeamViewSet)
 router.register(r'comment', views.CommentViewSet)
 
 # TODO
+# cors
+#
 # Team name update
 # Changed Password
-# Add email service
 # Problem Statement Statistics
 # Logo
 # Requests
+# Add email service
 
 
 urlpatterns = [

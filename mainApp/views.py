@@ -127,7 +127,7 @@ class NotificationView(AuthViewSet):
             request_obj = Request.objects.filter(archived=False).get(id=notification, team__in=teams)
             request_obj.accepted = True
             request_obj.save()
-            Teammate.objects.create(team_member=request_obj.team_member, team=request_obj.team)
+            Teammate.objects.create(team_member=request_obj.team_member, team=request_obj.team, leader=False)
             return Response(f"Accepted {request_obj.team_member.user.first_name}", status=status.HTTP_200_OK)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
