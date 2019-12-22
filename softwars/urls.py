@@ -43,8 +43,13 @@ urlpatterns = [
     url('api/admin/', admin.site.urls),
     url('api/login/', rest_auth_views.obtain_auth_token),
     url('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url('api/problem_statement/count/', views.ListProblemsCount.as_view()),
     url('api/problem_statement/list/', views.ListProblems.as_view()),
     url(r'api/problem_statement/(?P<pk>\d+)/$', views.ProblemTeam.as_view()),
     url('api/problem_statement/data/$', views.ListProblemTeam.as_view()),
     url('api/', include(router.urls)),
 ]
+
+
+
+

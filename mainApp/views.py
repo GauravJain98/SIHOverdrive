@@ -264,3 +264,9 @@ class TeamMemberList(AuthViewSet):
             team_member.delete()
             return Response(f"Left team {team_member.team.name}", status=status.HTTP_200_OK)
         return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListProblemsCount(AuthViewSet):
+
+    def get(self, request, format=None):
+        return Response(ProblemStatement.objects.count(),status=status.HTTP_200_OK)
