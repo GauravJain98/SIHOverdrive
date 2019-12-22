@@ -78,19 +78,11 @@ class Note(CommonInfo):
     note = models.TextField()
 
 
-STATUS = [
-    ("S", "Selected"),
-    ("N", "Neutral"),
-    ("R", "Rejected"),
-    ("I", "In-Progress"),
-]
-
-
 class ProblemStatementTeam(CommonInfo):
     read = models.BooleanField(default=False)
     problem_statement = models.ForeignKey(ProblemStatement, on_delete=models.CASCADE)
     team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
-    status = models.CharField(choices=STATUS, max_length=30,blank=False,null=False,default="N")
+    status = models.CharField(max_length=30, blank=False, null=False, default="Neutral")
     presentation = models.URLField()
     document = models.URLField()
 
@@ -112,9 +104,8 @@ class Request(CommonInfo):
 
 def team_post(sender, instance, created, *args, **kwargs):
     for ps in ProblemStatement.objects.all():
-        for team in Team.objects.all():
-            pst = ProblemStatementTeam.objects.create(problem_statement=ps, team=team)
-            pst.save()
+        pst = ProblemStatementTeam.objects.create(problem_statement=ps, team=instance)
+        pst.save()
 
 
 def problem_statement_post(sender, instance, created, *args, **kwargs):

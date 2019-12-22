@@ -1,5 +1,5 @@
-from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
@@ -13,6 +13,8 @@ from mainApp.permissions import CommentPermission, ProblemStatementTeamPermissio
 from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializer, ProblemStatementSerializer, \
     TeamMemberSerializer, ProblemStatementTeamSerializer, CommentSerializer, TeammateTeamMemberSerializer, \
     RequestSerializer
+
+
 # def function():
 #     from mainApp.models import ProblemStatement
 #     import csv
@@ -20,7 +22,6 @@ from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializ
 #     for line in reader:
 #         print("date")
 #         ProblemStatement.objects.create(**line)
-
 
 
 class AuthViewSet(APIView):
@@ -113,7 +114,7 @@ class JoinView(AuthViewSet):
                 return Response("Invalid Key", status=status.HTTP_404_NOT_FOUND)
             if not Teammate.objects.filter(team=team, team_member=request.user.team_member, archived=False).exists():
                 try:
-                    req = Request.objects.filter(team=team, team_member=request.user.team_member)
+                    req = Request.objects.get(team=team, team_member=request.user.team_member)
                     req.archived = False
                     req.save()
                     return Response("Request Already Sent Awaiting Response", status=status.HTTP_200_OK)
@@ -189,6 +190,7 @@ def validateURL(url):
     except ValidationError:
         return False
 
+
 class ProblemTeam(AuthViewSet):
 
     def get(self, request, pk, format=None):
@@ -205,7 +207,7 @@ class ProblemTeam(AuthViewSet):
             return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
-    def patch_validate_data(self,request):
+    def patch_validate_data(self, request):
         error_data = {}
         error = False
         ps_read = request.data.get("read", None)
@@ -227,8 +229,7 @@ class ProblemTeam(AuthViewSet):
         if error:
             return dict(error=error, error_data=error_data)
         else:
-            return dict(error=error,read=ps_read,status=ps_status,document=ps_document,presentation=ps_presentation)
-
+            return dict(error=error, read=ps_read, status=ps_status, document=ps_document, presentation=ps_presentation)
 
     def patch(self, request, pk, format=None):
         team_id = request.data.get("team", None)
@@ -299,4 +300,4 @@ class TeamMemberList(AuthViewSet):
 class ListProblemsCount(AuthViewSet):
 
     def get(self, request, format=None):
-        return Response(ProblemStatement.objects.count(),status=status.HTTP_200_OK)
+        return Response(ProblemStatement.objects.count(), status=status.HTTP_200_OK)
