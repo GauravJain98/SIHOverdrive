@@ -112,8 +112,9 @@ class Request(CommonInfo):
 
 def team_post(sender, instance, created, *args, **kwargs):
     for ps in ProblemStatement.objects.all():
-        pst = ProblemStatementTeam.objects.create(problem_statement=ps, team=instance)
-        pst.save()
+        for team in Team.objects.all():
+            pst = ProblemStatementTeam.objects.create(problem_statement=ps, team=team)
+            pst.save()
 
 
 def problem_statement_post(sender, instance, created, *args, **kwargs):

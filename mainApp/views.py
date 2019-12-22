@@ -12,6 +12,15 @@ from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializ
     TeamMemberSerializer, ProblemStatementTeamSerializer, CommentSerializer, TeammateTeamMemberSerializer, \
     RequestSerializer
 
+def function():
+    from mainApp.models import ProblemStatement
+    import csv
+    reader = csv.DictReader(open("SIH_DATA - out.csv"))
+    for line in reader:
+        print("date")
+        ProblemStatement.objects.create(**line)
+
+
 
 class AuthViewSet(APIView):
     authentication_classes = [TokenAuthentication, BasicAuthentication]
@@ -163,14 +172,69 @@ class ListTeams(AuthViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ListProblem(AuthViewSet):
+class ListProblems(AuthViewSet):
 
-    def get(self, request, team, format=None):
-        if Teammate.objects.filter(archived=False).filter(team__id=team, team_member=request.user.team_member):
-            team = ProblemStatementTeam.objects.filter(archived=False).filter(team_id=team)
-            serializer = ProblemStatementSerializer(team, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+    def get(self, request, format=None):
+        problem_statements = ProblemStatement.objects.all()
+        serializer = ProblemStatementSerializer(problem_statements, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ProblemTeam(AuthViewSet):
+
+    def get(self, request, pk, format=None):
+        team_id = request.data.get("team", None)
+        if team_id is not None:
+            try:
+                team = Team.objects.get(id=team_id)
+            except Team.DoesNotExist:
+                return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
+            if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
+                problem_statement_team = ProblemStatementTeam.objects.get(team=team, problem_statement=pk)
+                serializer = ProblemStatementTeamSerializer(problem_statement_team)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+        return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk, format=None):
+        ps_read = request.data.get("read", None)
+        ps_status = request.data.get("status", None)
+        team_id = request.data.get("team", None)
+        if ps_status not in ["Selected","Neutral","Rejected","In-Progress"] or not isinstance(ps_read,bool):
+            return Response("Invalid Request", status=status.HTTP_400_BAD_REQUEST)
+        if team_id is not None:
+            try:
+                team = Team.objects.get(id=team_id)
+            except Team.DoesNotExist:
+                return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
+            if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
+                problem_statement_team = ProblemStatementTeam.objects.get(team=team, problem_statement=pk)
+                if ps_read:
+                    problem_statement_team.read = ps_read
+                if ps_status:
+                    problem_statement_team.status = ps_status
+                problem_statement_team.save()
+                serializer = ProblemStatementTeamSerializer(problem_statement_team)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+        return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListProblemTeam(AuthViewSet):
+
+    def get(self, request, format=None):
+        team_id = request.data.get("team", None)
+        if team_id is not None:
+            try:
+                team = Team.objects.get(id=team_id)
+            except Team.DoesNotExist:
+                return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
+            if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
+                problem_statement_team = ProblemStatementTeam.objects.filter(team=team)
+                serializer = ProblemStatementSerializer(problem_statement_team, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+        return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeamMemberList(AuthViewSet):

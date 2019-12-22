@@ -12,10 +12,18 @@ router.register(r'note', views.NoteViewSet)
 router.register(r'problemstatementteam', views.ProblemStatementTeamViewSet)
 router.register(r'comment', views.CommentViewSet)
 
+# DONE
+# PS static
+# PS dyan
+# Read
+# Status
+
 # TODO
-# cors
+# New statement poll
+# URL
+# Comment and polling variable
+
 # Team name update
-# Data
 # Problem Statement Statistics
 
 # Logo
@@ -26,8 +34,8 @@ router.register(r'comment', views.CommentViewSet)
 
 urlpatterns = [
     url('api/register/', views.RegisterView.as_view()),
+    url('api/register/', views.RegisterView.as_view()),
     url('api/team/list/', views.ListTeams.as_view()),
-    url('api/problem_statement/list/', views.ListProblem.as_view()),
     url(r'api/team/(?P<pk>\d+)/$', views.TeamMemberList.as_view()),
     url('api/team/', views.JoinView.as_view()),
     url('api/notification/', views.NotificationView.as_view()),
@@ -35,5 +43,8 @@ urlpatterns = [
     url('api/admin/', admin.site.urls),
     url('api/login/', rest_auth_views.obtain_auth_token),
     url('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url('api/problem_statement/list/', views.ListProblems.as_view()),
+    url(r'api/problem_statement/(?P<pk>\d+)/$', views.ProblemTeam.as_view()),
+    url('api/problem_statement/data/$', views.ListProblemTeam.as_view()),
     url('api/', include(router.urls)),
 ]
