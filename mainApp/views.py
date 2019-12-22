@@ -1,3 +1,5 @@
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
@@ -11,14 +13,13 @@ from mainApp.permissions import CommentPermission, ProblemStatementTeamPermissio
 from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializer, ProblemStatementSerializer, \
     TeamMemberSerializer, ProblemStatementTeamSerializer, CommentSerializer, TeammateTeamMemberSerializer, \
     RequestSerializer
-
-def function():
-    from mainApp.models import ProblemStatement
-    import csv
-    reader = csv.DictReader(open("SIH_DATA - out.csv"))
-    for line in reader:
-        print("date")
-        ProblemStatement.objects.create(**line)
+# def function():
+#     from mainApp.models import ProblemStatement
+#     import csv
+#     reader = csv.DictReader(open("SIH_DATA - out.csv"))
+#     for line in reader:
+#         print("date")
+#         ProblemStatement.objects.create(**line)
 
 
 
@@ -180,10 +181,18 @@ class ListProblems(AuthViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+def validateURL(url):
+    validate = URLValidator()
+    try:
+        validate(url)
+        return True
+    except ValidationError:
+        return False
+
 class ProblemTeam(AuthViewSet):
 
     def get(self, request, pk, format=None):
-        team_id = request.data.get("team", None)
+        team_id = request.GET.get("team", None)
         if team_id is not None:
             try:
                 team = Team.objects.get(id=team_id)
@@ -196,25 +205,46 @@ class ProblemTeam(AuthViewSet):
             return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, request, pk, format=None):
+    def patch_validate_data(self,request):
+        error_data = {}
+        error = False
         ps_read = request.data.get("read", None)
         ps_status = request.data.get("status", None)
+        ps_document = request.data.get("document", None)
+        ps_presentation = request.data.get("presentation", None)
+        if ps_status not in ["Selected", "Neutral", "Rejected", "In-Progress"]:
+            error = True
+            error_data['status'] = f'Should be in [{", ".join(["Selected", "Neutral", "Rejected", "In-Progress"])}]'
+        if not isinstance(ps_read, bool):
+            error = True
+            error_data['read'] = 'Should be boolean'
+        if not validateURL(ps_document):
+            error = True
+            error_data['document'] = 'Should be a valid url'
+        if not validateURL(ps_presentation):
+            error = True
+            error_data['presentation'] = 'Should be valid url'
+        if error:
+            return dict(error=error, error_data=error_data)
+        else:
+            return dict(error=error,read=ps_read,status=ps_status,document=ps_document,presentation=ps_presentation)
+
+
+    def patch(self, request, pk, format=None):
         team_id = request.data.get("team", None)
-        if ps_status not in ["Selected","Neutral","Rejected","In-Progress"] or not isinstance(ps_read,bool):
-            return Response("Invalid Request", status=status.HTTP_400_BAD_REQUEST)
+        validated_data = self.patch_validate_data(request)
+        error = validated_data.pop('error')
+        if error:
+            return Response(validated_data.error_data, status=status.HTTP_400_BAD_REQUEST)
         if team_id is not None:
             try:
                 team = Team.objects.get(id=team_id)
             except Team.DoesNotExist:
                 return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
             if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
-                problem_statement_team = ProblemStatementTeam.objects.get(team=team, problem_statement=pk)
-                if ps_read:
-                    problem_statement_team.read = ps_read
-                if ps_status:
-                    problem_statement_team.status = ps_status
-                problem_statement_team.save()
-                serializer = ProblemStatementTeamSerializer(problem_statement_team)
+                problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
+                problem_statement_team.update(**validated_data)
+                serializer = ProblemStatementTeamSerializer(problem_statement_team.first())
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
@@ -223,7 +253,7 @@ class ProblemTeam(AuthViewSet):
 class ListProblemTeam(AuthViewSet):
 
     def get(self, request, format=None):
-        team_id = request.data.get("team", None)
+        team_id = request.GET.get("team", None)
         if team_id is not None:
             try:
                 team = Team.objects.get(id=team_id)
@@ -231,7 +261,7 @@ class ListProblemTeam(AuthViewSet):
                 return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
             if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
                 problem_statement_team = ProblemStatementTeam.objects.filter(team=team)
-                serializer = ProblemStatementSerializer(problem_statement_team, many=True)
+                serializer = ProblemStatementTeamSerializer(problem_statement_team, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)

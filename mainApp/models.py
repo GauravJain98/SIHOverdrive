@@ -90,7 +90,7 @@ class ProblemStatementTeam(CommonInfo):
     read = models.BooleanField(default=False)
     problem_statement = models.ForeignKey(ProblemStatement, on_delete=models.CASCADE)
     team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
-    status = models.CharField(choices=STATUS, max_length=30)
+    status = models.CharField(choices=STATUS, max_length=30,blank=False,null=False,default="N")
     presentation = models.URLField()
     document = models.URLField()
 
