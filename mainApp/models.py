@@ -59,6 +59,7 @@ CATEGORIES = [
 
 
 class ProblemStatement(CommonInfo):
+    img = models.URLField()
     organization = models.CharField(max_length=200, null=False, blank=False)
     category = models.CharField(choices=CATEGORIES, max_length=70)
     ps_number = models.CharField(max_length=6)
