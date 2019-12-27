@@ -15,14 +15,30 @@ from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializ
     RequestSerializer
 
 
-# def function():
-#     from mainApp.models import ProblemStatement
-#     import csv
-#     reader = csv.DictReader(open("SIH_DATA - out.csv"))
-#     for line in reader:
-#         print("date")
-#         ProblemStatement.objects.create(**line)
+def function():
+    from mainApp.models import ProblemStatement
+    import csv
+    reader = csv.DictReader(open("data-h.csv"))
+    for line in reader:
+        print("date")
+        ProblemStatement.objects.create(**line)
 
+
+def img_update():
+    from mainApp.models import ProblemStatement
+    reader = open("s-img-data.csv", "r")
+    data = reader.read().split("\n")
+    for line in data:
+        try:
+            ps_number, img = line.split(",")
+            try:
+                ps = ProblemStatement.objects.get(ps_number=ps_number)
+                ps.img = img
+                ps.save()
+            except:
+                print(ps_number)
+        except:
+            print(line)
 
 class AuthViewSet(APIView):
     authentication_classes = [TokenAuthentication, BasicAuthentication]
@@ -93,8 +109,8 @@ class JoinView(AuthViewSet):
     authentication_classes = [TokenAuthentication, BasicAuthentication]
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, format=None):
-        return Response(f"WORKS {request.user}")
+    # def get(self, request, format=None):
+    #     return Response("WORKS {request.user}")
 
     def post(self, request, format=None):
         if request.data.get('create', "") == 'true':
@@ -278,6 +294,19 @@ class TeamMemberList(AuthViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
 
+    # Remove this to this url if change the url
+    def patch(self, request, pk, format=None):
+        teammates = Teammate.objects.filter(team__pk=pk, team_member=request.user.team_member, archived=False)
+        if teammates.exists():
+            teammate = teammates.first()
+            if teammate.leader:
+                team = teammate.team
+                team.note = request.data.get("note")
+                team.name = request.data.get("name")
+                team.save()
+            return Response("You aint the team leader bro", status=status.HTTP_200_OK)
+        return Response("Not your team bro :(", status=status.HTTP_200_OK)
+
     def delete(self, request, pk, format=None):
         if pk is not None and Teammate.objects.filter(archived=False).filter(team__id=pk,
                                                                              team_member=request.user.team_member).exists():
@@ -301,3 +330,60 @@ class ListProblemsCount(AuthViewSet):
 
     def get(self, request, format=None):
         return Response(ProblemStatement.objects.count(), status=status.HTTP_200_OK)
+
+
+class ListCommentCount(AuthViewSet):
+
+    def get(self, request, pk):
+        team_id = request.data.get("team", None)
+        if team_id is not None:
+            try:
+                team = Team.objects.get(id=team_id)
+            except Team.DoesNotExist:
+                return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
+            if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
+                problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
+                return Response(problem_statement_team.count(), status=status.HTTP_200_OK)
+            return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+        return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListComment(AuthViewSet):
+
+    def get(self, request, pk):
+        team_id = request.data.get("team", None)
+        if team_id is not None:
+            try:
+                team = Team.objects.get(id=team_id)
+            except Team.DoesNotExist:
+                return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
+            if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
+                problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
+                serializer = CommentSerializer(problem_statement_team.comments.all(), many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+        return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, pk):
+        team_id = request.data.get("team", None)
+        comment_text = request.data.get("comment", None)
+        if team_id is not None:
+            try:
+                team = Team.objects.get(id=team_id)
+            except Team.DoesNotExist:
+                return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
+            teammates = Teammate.objects.filter(team=team, team_member__user=request.user)
+            if team and teammates.exists():
+                teammate = teammates.first()
+                problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
+                comment = Comment.objects.create(problem_statement_team=problem_statement_team, teammate=teammate,
+                                                 comment=comment_text)
+                serializer = CommentSerializer(comment)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
+        errors = {}
+        if team_id is None:
+            errors['team'] = "Add Team Id"
+        if comment_text is None:
+            errors['comment'] = "Add Comment"
+        return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)

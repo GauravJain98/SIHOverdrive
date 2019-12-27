@@ -89,9 +89,9 @@ class ProblemStatementTeam(CommonInfo):
 
 
 class Comment(CommonInfo):
-    problem_statement_team = models.ForeignKey(ProblemStatementTeam, on_delete=models.CASCADE)
+    problem_statement_team = models.ForeignKey(ProblemStatementTeam, on_delete=models.CASCADE, related_name="comments")
     teammate = models.ForeignKey(Teammate, on_delete=models.CASCADE)
-
+    comment = models.TextField()
     def clean(self):
         if self.teammate.team != self.problem_statement_team.team:
             raise ValidationError("Only team members can comment")
