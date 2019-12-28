@@ -230,29 +230,30 @@ class ProblemTeam(AuthViewSet):
         ps_status = request.data.get("status", None)
         ps_document = request.data.get("document", None)
         ps_presentation = request.data.get("presentation", None)
-        if ps_status not in ["Selected", "Neutral", "Rejected", "In-Progress"]:
+        if ps_status and ps_status not in ["Selected", "Neutral", "Rejected", "In-Progress"]:
             error = True
             error_data['status'] = f'Should be in [{", ".join(["Selected", "Neutral", "Rejected", "In-Progress"])}]'
-        if not isinstance(ps_read, bool):
+        if ps_read and not isinstance(ps_read, bool):
             error = True
             error_data['read'] = 'Should be boolean'
-        if not validateURL(ps_document):
+        if ps_document and not validateURL(ps_document):
             error = True
             error_data['document'] = 'Should be a valid url'
-        if not validateURL(ps_presentation):
+        if ps_presentation and not validateURL(ps_presentation):
             error = True
             error_data['presentation'] = 'Should be valid url'
         if error:
             return dict(error=error, error_data=error_data)
         else:
-            return dict(error=error, read=ps_read, status=ps_status, document=ps_document, presentation=ps_presentation)
+            return dict(error=error, error_data=error_data, read=ps_read, status=ps_status, document=ps_document,
+                        presentation=ps_presentation)
 
     def patch(self, request, pk, format=None):
         team_id = request.data.get("team", None)
         validated_data = self.patch_validate_data(request)
         error = validated_data.pop('error')
         if error:
-            return Response(validated_data.error_data, status=status.HTTP_400_BAD_REQUEST)
+            return Response(validated_data['error_data'], status=status.HTTP_400_BAD_REQUEST)
         if team_id is not None:
             try:
                 team = Team.objects.get(id=team_id)
@@ -297,15 +298,19 @@ class TeamMemberList(AuthViewSet):
     # Remove this to this url if change the url
     def patch(self, request, pk, format=None):
         teammates = Teammate.objects.filter(team__pk=pk, team_member=request.user.team_member, archived=False)
+        note = request.data.get("note", None)
+        name = request.data.get("name", None)
         if teammates.exists():
             teammate = teammates.first()
             if teammate.leader:
                 team = teammate.team
-                team.note = request.data.get("note")
-                team.name = request.data.get("name")
+                if note:
+                    team.note = note
+                if name:
+                    team.name = name
                 team.save()
             return Response("You aint the team leader bro", status=status.HTTP_200_OK)
-        return Response("Not your team bro :(", status=status.HTTP_200_OK)
+        return Response("Not your team bro :(", status=status.HTTP_401_UNAUTHORIZED)
 
     def delete(self, request, pk, format=None):
         if pk is not None and Teammate.objects.filter(archived=False).filter(team__id=pk,

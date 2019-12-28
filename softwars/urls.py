@@ -22,7 +22,7 @@ router.register(r'comment', views.CommentViewSet)
 # Team name update
 # Requests
 
-# TODO
+# TODOK
 # Changed Password
 # Add email service
 
