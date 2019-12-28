@@ -254,6 +254,8 @@ class ProblemTeam(AuthViewSet):
         error = validated_data.pop('error')
         if error:
             return Response(validated_data['error_data'], status=status.HTTP_400_BAD_REQUEST)
+        else:
+            validated_data.pop('error_data')
         if team_id is not None:
             try:
                 team = Team.objects.get(id=team_id)
