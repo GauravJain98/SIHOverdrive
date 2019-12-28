@@ -84,14 +84,15 @@ class ProblemStatementTeam(CommonInfo):
     problem_statement = models.ForeignKey(ProblemStatement, on_delete=models.CASCADE)
     team = models.ForeignKey(to=Team, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, blank=False, null=False, default="Neutral")
-    presentation = models.URLField()
-    document = models.URLField()
+    presentation = models.URLField(null=True)
+    document = models.URLField(null=True)
 
 
 class Comment(CommonInfo):
     problem_statement_team = models.ForeignKey(ProblemStatementTeam, on_delete=models.CASCADE, related_name="comments")
     teammate = models.ForeignKey(Teammate, on_delete=models.CASCADE)
     comment = models.TextField()
+
     def clean(self):
         if self.teammate.team != self.problem_statement_team.team:
             raise ValidationError("Only team members can comment")
