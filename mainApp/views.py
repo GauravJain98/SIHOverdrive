@@ -358,7 +358,7 @@ class ListCommentCount(AuthViewSet):
 class ListComment(AuthViewSet):
 
     def get(self, request, pk):
-        team_id = request.data.get("team", None)
+        team_id = request.GET.get("team", None)
         if team_id is not None:
             try:
                 team = Team.objects.get(id=team_id)
