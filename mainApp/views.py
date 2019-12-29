@@ -225,28 +225,39 @@ class ProblemTeam(AuthViewSet):
 
     def patch_validate_data(self, request):
         error_data = {}
+        data = {}
         error = False
         ps_read = request.data.get("read", None)
         ps_status = request.data.get("status", None)
         ps_document = request.data.get("document", None)
         ps_presentation = request.data.get("presentation", None)
-        if ps_status and ps_status not in ["Selected", "Neutral", "Rejected", "In-Progress"]:
-            error = True
-            error_data['status'] = f'Should be in [{", ".join(["Selected", "Neutral", "Rejected", "In-Progress"])}]'
-        if ps_read and not isinstance(ps_read, bool):
-            error = True
-            error_data['read'] = 'Should be boolean'
-        if ps_document and not validateURL(ps_document):
-            error = True
-            error_data['document'] = 'Should be a valid url'
-        if ps_presentation and not validateURL(ps_presentation):
-            error = True
-            error_data['presentation'] = 'Should be valid url'
-        if error:
-            return dict(error=error, error_data=error_data)
-        else:
-            return dict(error=error, error_data=error_data, read=ps_read, status=ps_status, document=ps_document,
-                        presentation=ps_presentation)
+        if ps_status:
+            if ps_status not in ["Selected", "Neutral", "Rejected", "In-Progress"]:
+                error = True
+                error_data['status'] = f'Should be in [{", ".join(["Selected", "Neutral", "Rejected", "In-Progress"])}]'
+            else:
+                data['status'] = ps_status
+        if ps_read:
+            if not isinstance(ps_read, bool):
+                error = True
+                error_data['read'] = 'Should be boolean'
+            else:
+                data['read'] = ps_read
+        if ps_document:
+            if not validateURL(ps_document):
+                error = True
+                error_data['document'] = 'Should be a valid url'
+            else:
+                data['document'] = ps_document
+        if ps_presentation:
+            if not validateURL(ps_presentation):
+                error = True
+                error_data['presentation'] = 'Should be valid url'
+            else:
+                data['presentation'] = ps_presentation
+        data['error'] = error
+        data['error_data'] = error_data
+        return data
 
     def patch(self, request, pk, format=None):
         team_id = request.data.get("team", None)
@@ -263,6 +274,7 @@ class ProblemTeam(AuthViewSet):
                 return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
             if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
                 problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
+
                 problem_statement_team.update(**validated_data)
                 serializer = ProblemStatementTeamSerializer(problem_statement_team.first())
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -342,7 +354,7 @@ class ListProblemsCount(AuthViewSet):
 class ListCommentCount(AuthViewSet):
 
     def get(self, request, pk):
-        team_id = request.data.get("team", None)
+        team_id = request.GET.get("team", None)
         if team_id is not None:
             try:
                 team = Team.objects.get(id=team_id)
@@ -350,7 +362,10 @@ class ListCommentCount(AuthViewSet):
                 return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
             if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
                 problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
-                return Response(problem_statement_team.count(), status=status.HTTP_200_OK)
+                if problem_statement_team.exists():
+                    comments = problem_statement_team.first().comments
+                    return Response(comments.count(), status=status.HTTP_200_OK)
+                return Response("Contact Developer", status=status.HTTP_404_NOT_FOUND)
             return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
@@ -366,8 +381,11 @@ class ListComment(AuthViewSet):
                 return Response("Invalid Team", status=status.HTTP_404_NOT_FOUND)
             if team and Teammate.objects.filter(team=team, team_member__user=request.user).exists():
                 problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
-                serializer = CommentSerializer(problem_statement_team.comments.all(), many=True)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                if problem_statement_team.exists():
+                    comments = problem_statement_team.first().comments
+                    serializer = CommentSerializer(comments.all(), many=True)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response("Contact Developer", status=status.HTTP_404_NOT_FOUND)
             return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
         return Response("Invalid Format", status=status.HTTP_400_BAD_REQUEST)
 
@@ -383,10 +401,13 @@ class ListComment(AuthViewSet):
             if team and teammates.exists():
                 teammate = teammates.first()
                 problem_statement_team = ProblemStatementTeam.objects.filter(team=team, problem_statement=pk)
-                comment = Comment.objects.create(problem_statement_team=problem_statement_team, teammate=teammate,
-                                                 comment=comment_text)
-                serializer = CommentSerializer(comment)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                if problem_statement_team.exists():
+                    comment = Comment.objects.create(problem_statement_team=problem_statement_team.first(),
+                                                     teammate=teammate,
+                                                     comment=comment_text)
+                    serializer = CommentSerializer(comment)
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response("Contact Developer", status=status.HTTP_404_NOT_FOUND)
             return Response("Not your team bro", status=status.HTTP_401_UNAUTHORIZED)
         errors = {}
         if team_id is None:
