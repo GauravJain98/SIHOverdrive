@@ -237,7 +237,7 @@ class ProblemTeam(AuthViewSet):
                 error_data['status'] = f'Should be in [{", ".join(["Selected", "Neutral", "Rejected", "In-Progress"])}]'
             else:
                 data['status'] = ps_status
-        if ps_read:
+        if ps_read is not None:
             if not isinstance(ps_read, bool):
                 error = True
                 error_data['read'] = 'Should be boolean'
