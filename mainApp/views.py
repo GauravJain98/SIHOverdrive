@@ -18,7 +18,7 @@ from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializ
 def function():
     from mainApp.models import ProblemStatement
     import csv
-    reader = csv.DictReader(open("data-h.csv"))
+    reader = csv.DictReader(open("out.csv"))
     for line in reader:
         print("date")
         ProblemStatement.objects.create(**line)
