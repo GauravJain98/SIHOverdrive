@@ -200,6 +200,8 @@ class ListProblems(AuthViewSet):
 
 def validateURL(url):
     validate = URLValidator()
+    if url is None:
+        return True
     try:
         validate(url)
         return True
