@@ -18,11 +18,14 @@ from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializ
 def function():
     from mainApp.models import ProblemStatement
     import csv
-    reader = csv.DictReader(open("out.csv"))
+    reader = csv.DictReader(open("out-f.csv"))
+    output = "OrderedDict([('description', '1'), ('youtube', 'A sensor may be developed to be put up on cylinders which will gauge the fuel quantity and automatically inform the linked distributor for refill cylinders. In this way usage of all the customers can be exactly mapped and we can have more accurate predictive demand and supply.'), ('title', ''), ('organization', 'Technological advances in LPG sector'), ('category', 'Ministry of Petroleum and Natural Gas'), ('ps_number', 'Hardware'), ('domain_bucket', 'AJ130'), ('img', 'Miscellaneous')])"
     for line in reader:
-        print("date")
-        ProblemStatement.objects.create(**line)
-
+        try:
+            ProblemStatement.objects.create(**line)
+        except:
+            output+=str(line)
+    print(output)
 
 def img_update():
     from mainApp.models import ProblemStatement

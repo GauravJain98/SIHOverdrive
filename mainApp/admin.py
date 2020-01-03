@@ -18,7 +18,7 @@ searchFields = {
 
 
 def has_delete_permission(self, request, obj=None):
-    return False
+    return True
 
 
 def class_dict(model_name, model):
