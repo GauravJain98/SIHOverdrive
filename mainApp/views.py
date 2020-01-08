@@ -33,10 +33,11 @@ def function():
     for line in reader:
         # print("description,youtube,title,organization,category,ps_number,domain_bucket,img,")
         ps_number = line['ps_number']
+        print(ps_number)
         try:
             if not ProblemStatement.objects.filter(ps_number=ps_number).exists():
                 # ProblemStatement.objects.create(**line)
-                print(ps_number)
+                print("wtf" + ps_number)
             # break
         except:
             print("ERROR {}".format(ps_number))
