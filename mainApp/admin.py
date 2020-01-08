@@ -14,6 +14,7 @@ extraFields = {
 }
 
 removeFields = {
+    'problem_statement':['description']
 }
 
 searchFields = {
@@ -44,7 +45,7 @@ def class_dict(model_name, model):
         fields['inlines'] = inlines[model_name]
     if model_name in searchFields:
         fields['search_fields'] = searchFields[model_name]
-    fields['list_filter'] = filterFields
+    # fields['list_filter'] = filterFields
     fields['has_delete_permission'] = has_delete_permission
     return fields
 
