@@ -29,7 +29,6 @@ router.register(r'comment', views.CommentViewSet)
 
 urlpatterns = [
     url('api/register/', views.RegisterView.as_view()),
-    url('api/register/', views.RegisterView.as_view()),
     url('api/team/list/', views.ListTeams.as_view()),
     # URL should be team_members
     url(r'api/team/(?P<pk>\d+)/$', views.TeamMemberList.as_view()),
