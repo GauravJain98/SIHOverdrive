@@ -15,30 +15,47 @@ from mainApp.serializers import TeamSerializer, NoteSerializer, TeammateSerializ
     RequestSerializer
 
 
+#     ps = ProblemStatement.objects.filter(ps_number=ps_number).first()
+#     ps.ps_number = line['ps_number']
+#     ps.description = line['description']
+#     ps.youtube = line['youtube']
+#     ps.title = line['title']
+#     ps.organization = line['organization']
+#     ps.category = line['category']
+#     ps.domain_bucket = line['domain_bucket']
+#     ps.img = line['img']
+#     ps.save()
+# else:
 def function():
     from mainApp.models import ProblemStatement
     import csv
-    reader = csv.DictReader(open("out.csv"))
+    reader = csv.DictReader(open("data-090120.csv"))
     for line in reader:
-        print("date")
-        ProblemStatement.objects.create(**line)
-
-
-def img_update():
-    from mainApp.models import ProblemStatement
-    reader = open("s-img-data.csv", "r")
-    data = reader.read().split("\n")
-    for line in data:
+        # print("description,youtube,title,organization,category,ps_number,domain_bucket,img,")
+        ps_number = line['ps_number']
         try:
-            ps_number, img = line.split(",")
-            try:
-                ps = ProblemStatement.objects.get(ps_number=ps_number)
-                ps.img = img
-                ps.save()
-            except:
+            if not ProblemStatement.objects.filter(ps_number=ps_number).exists():
+                # ProblemStatement.objects.create(**line)
                 print(ps_number)
+            # break
         except:
-            print(line)
+            print("ERROR {}".format(ps_number))
+
+# def img_update():
+#     from mainApp.models import ProblemStatement
+#     reader = open("s-img-data.csv", "r")
+#     data = reader.read().split("\n")
+#     for line in data:
+#         try:
+#             ps_number, img = line.split(",")
+#             try:
+#                 ps = ProblemStatement.objects.get(ps_number=ps_number)
+#                 ps.img = img
+#                 ps.save()
+#             except:
+#                 print(ps_number)
+#         except:
+#             print(line)
 
 class AuthViewSet(APIView):
     authentication_classes = [TokenAuthentication, BasicAuthentication]

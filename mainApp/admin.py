@@ -9,10 +9,13 @@ admin.site.site_title = 'Welcome to SIH Overdrive Admin Dashboard'
 
 inlines = {
 }
+
 extraFields = {
 }
+
 removeFields = {
 }
+
 searchFields = {
 }
 
