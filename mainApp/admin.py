@@ -31,7 +31,7 @@ def class_dict(model_name, model):
     else:
         remove = ()
     for field in fields:
-        filterFields = filterFields + (field.name,)
+        # filterFields = filterFields + (field.name,)
         if field.name not in remove:
             listField = listField + (field.name,)
     if model_name in extraFields:

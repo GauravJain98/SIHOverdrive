@@ -84,7 +84,7 @@ DATABASES = {
         'NAME': 'sih-database',
         'USER': 'postgres',
         'PASSWORD': '8RxDW7MFxLrKByvJWrhT',
-        'HOST': 'sih-db.c5rm5wfzmcme.ap-south-1.rds.amazonaws.com',
+        'HOST': 'sih-db-restored.c5rm5wfzmcme.ap-south-1.rds.amazonaws.com',
         'PORT': '5432'
     }
 }
