@@ -18,7 +18,10 @@ The major problem we faced was unorganised division, mess of papers and not to m
 
 ### Screenshots
 
-![Alt text](screenshots/sih-overdrive-screenshots-1.png =250x250)
+![Alt text](screenshots/sih-overdrive-screenshots-1.png | width=250)
+![Alt text](screenshots/sih-overdrive-screenshots-2.png | width=250)
+![Alt text](screenshots/sih-overdrive-screenshots-3.png | width=250)
+![Alt text](screenshots/sih-overdrive-screenshots-4.png | width=250)
 
 ### Set Up
 
